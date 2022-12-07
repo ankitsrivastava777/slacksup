@@ -139,4 +139,4 @@ cron.schedule("30 18 * * 1-5", function () {
   }
 });
 
-app.listen(8080);
+app.listen(process.env.port);
