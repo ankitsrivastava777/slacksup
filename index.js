@@ -5,30 +5,18 @@ const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { App } = require("@slack/bolt");
-const conn = require("./config/config");
-const axios = require("axios");
 const route = require("./routes/routes");
 const { MongoClient } = require("mongodb");
 const url =
   "mongodb+srv://xmage:xmage@cluster0-xooqb.mongodb.net/slack_settings_test?retryWrites=true";
 const client = new MongoClient(url);
 const dbName = "test";
-
-// async function main() {
-//   // Use connect method to connect to the server
-//   await client.connect();
-//   console.log("Connected successfully to server");
-//   const db = client.db(dbName);
-//   const collection = await db.collection("users").find().toArray();
-//   console.log(collection, "dddddddddd");
-//   // the following code examples can be pasted here...
-//   return "done.";
-// }
-
-// main()
-//   .then(console.log)
-//   .catch(console.error)
-//   .finally(() => client.close());
+async function main() {
+  await client.connect();
+  const db = client.db(dbName);
+  let collection = await db.collection("users").find().toArray();
+  return collection;
+}
 
 require("dotenv").config();
 app.use(
@@ -54,17 +42,18 @@ app.use("/", route);
 
 async function run(team) {
   const client = new WebClient(
-    "xoxb-4437570014530-4461293462368-3wfx5crreNTZ8pdWH6kmrt6Y",
+    "xoxb-4437570014530-4461293462368-9frmfVE6xdsGstAQsqzzmGMR",
     {
       logLevel: LogLevel.DEBUG,
     }
   );
-  const channelId = "D04CVHDDPEE";
+  const channelId = "U04CSJHC23X";
 
   try {
     const result = await client.chat.postMessage({
-      channel: channelId,
-      text: "Hello world",
+      channel: team,
+      username: "sup",
+      text: "Hello Whatsup",
       title: {
         type: "plain_text",
         text: "My App",
@@ -150,30 +139,24 @@ async function run(team) {
   }
 }
 
-// cron.schedule("0 10 * * 1-5", function () {
-//   let teams = {
-//     test: "C04CPC5E0K0",
-//     test1: "C04CPCXK2DU",
-//     test2: "C04D8PLQBNF",
-//   };
-
-//   let team = Object.keys(teams);
-//   for (teamName in teams) {
-run().catch((err) => console.log(err));
-//   }
-// });
+cron.schedule("0 10 * * 1-5", function () {
+  (async () => {
+    let data = await main();
+    console.log(data, "dddd");
+    for (let i = 0; i <= data.length - 1; i++) {
+      run(data[i].slack_id).catch((err) => console.log(err));
+    }
+  })();
+});
 
 cron.schedule("30 18 * * 1-5", function () {
-  let teams = {
-    test: "C04CPC5E0K0",
-    test1: "C04CPCXK2DU",
-    test2: "C04D8PLQBNF",
-  };
-
-  let team = Object.keys(teams);
-  for (teamName in teams) {
-    run(teamName).catch((err) => console.log(err));
-  }
+  (async () => {
+    let data = await main();
+    console.log(data, "dddd");
+    for (let i = 0; i <= data.length - 1; i++) {
+      run(data[i].slack_id).catch((err) => console.log(err));
+    }
+  })();
 });
 
 app.listen(8000);
